@@ -1,45 +1,49 @@
 // @flow
-/* eslint fp/no-mutating-methods: 0 */
-
 import React from 'react';
 import Relay from 'react-relay/classic';
-import { lifecycle, compose, withProps } from 'recompose';
-import { isEqual, head } from 'lodash';
+import { lifecycle, compose, mapProps } from 'recompose';
+import { isEqual, get } from 'lodash';
+
 import { makeFilter } from '@ncigdc/utils/filters';
+import { geneMap } from '@ncigdc/utils/validateIds';
+
+const setRelayFilters = ({ geneId, relay, symbol }) => {
+  const variables = {
+    geneIdFilters: makeFilter([
+      {
+        field: 'genes.gene_id',
+        value: [geneId],
+      },
+    ]),
+    fetchGeneSymbols: !!geneId && !symbol,
+  };
+  relay.setVariables(variables);
+};
 
 const GeneSymbolComponent = compose(
-  withProps(({ relay }) => ({
-    setRelayFilters: ({ geneId }) => {
-      const variables = {
-        geneIdFilters: makeFilter([
-          {
-            field: 'genes.gene_id',
-            value: [geneId],
-          },
-        ]),
-        fetchGeneSymbols: !!geneId,
-      };
-      relay.setVariables(variables);
-    },
-  })),
+  mapProps(props => {
+    return {
+      ...props,
+      symbol:
+        get(geneMap, `${props.geneId}.symbol`) ||
+          get(props.explore.genes.hits, 'edges[0].node.symbol'),
+    };
+  }),
   lifecycle({
     componentDidMount(): void {
-      this.props.setRelayFilters(this.props);
+      setRelayFilters(this.props);
     },
     componentWillReceiveProps(nextProps: any): void {
       if (!isEqual(this.props.filters, nextProps.filters)) {
-        nextProps.setRelayFilters(nextProps);
+        setRelayFilters(nextProps);
       }
     },
   }),
 )(
-  ({ explore, geneId }) =>
-    explore.genes.hits
+  ({ explore, symbol, geneId }) =>
+    symbol || explore.genes.hits
       ? <span>
-          {
-            (head(explore.genes.hits.edges) || { node: { symbol: geneId } })
-              .node.symbol
-          }
+          {symbol || geneId}
         </span>
       : <span style={{ width: '45px' }}>&nbsp;</span>,
 );
