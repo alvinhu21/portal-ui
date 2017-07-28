@@ -38,3 +38,18 @@ build
 
 # OS
 .DS_Store
+
+#SSL ( THe *.crt is optional )
+*.key
+*.crt
+
+#GDC related files
+gdc-user-token.*
+
+#OpenStack
+admin_auth
+.novarc
+
+#s3 creds
+.s3cfg
+.aws/
