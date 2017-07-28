@@ -10,9 +10,11 @@ const CenteredColumnContainer = styled(Column, {
   flex: 1,
   padding: '3rem',
   height: '50rem',
-  position: 'relative',
+  position: 'absolute !important',
   alignItems: 'center',
   justifyContent: 'center',
+  top: 0,
+  width: '100%',
 });
 
 export default (Component: ReactClass<*>) => (props: Object) => {
